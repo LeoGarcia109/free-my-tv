@@ -551,3 +551,88 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 /* Tizen 2 (see tv.js): no shadows or animations, which its GPU can't keep up with while the focus moves. */
 .lite * { box-shadow: none !important; -webkit-transition: none !important; transition: none !important; }
+
+/* MARK: - Family Guard & Noticeboard */
+.family-guard {
+  position: absolute;
+  top: 734px;
+  left: 76px;
+  right: 76px;
+  height: 62px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-transition: opacity 0.4s ease, -webkit-transform 0.4s ease;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  -webkit-transform: translateY(8px);
+  transform: translateY(8px);
+  background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.55));
+  background: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.55));
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  z-index: 10;
+}
+.night .family-guard {
+  background: -webkit-linear-gradient(top, rgba(38, 38, 44, 0.85), rgba(24, 24, 28, 0.75));
+  background: linear-gradient(rgba(38, 38, 44, 0.85), rgba(24, 24, 28, 0.75));
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.family-guard.active {
+  opacity: 1;
+  pointer-events: auto;
+  -webkit-transform: translateY(0);
+  transform: translateY(0);
+}
+.family-guard-icon {
+  font-size: 26px;
+  margin-right: 18px;
+  line-height: 1;
+}
+.family-guard-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+.family-guard-title {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #0071E3;
+  margin-bottom: 2px;
+}
+.night .family-guard-title {
+  color: #2997FF;
+}
+.family-guard.message .family-guard-title {
+  color: #FF2D55;
+}
+.family-guard.bedtime .family-guard-title {
+  color: #AF52DE;
+}
+.family-guard.warning .family-guard-title {
+  color: #FF9500;
+}
+.family-guard-text {
+  font-size: 19px;
+  font-weight: 500;
+  color: #1D1D1F;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.night .family-guard-text {
+  color: #F5F5F7;
+}
+.family-guard-time {
+  font-size: 15px;
+  font-weight: 600;
+  color: #86868B;
+  margin-left: 20px;
+}

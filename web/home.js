@@ -1183,6 +1183,81 @@
 
   // MARK: - Start
 
+  // MARK: - Family Guard & Noticeboard
+  var noticeServer = 'http://192.168.100.120:9120/tv/notice';
+
+  function updateFamilyGuard() {
+    var guardEl = $('family-guard');
+    if (!guardEl) return;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', noticeServer, true);
+    xhr.timeout = 2500;
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState !== 4) return;
+      var notice = null;
+      if (xhr.status === 200) {
+        try { notice = JSON.parse(xhr.responseText); } catch (e) {}
+      }
+      applyGuardState(notice);
+    };
+    xhr.ontimeout = function () { applyGuardState(null); };
+    xhr.onerror = function () { applyGuardState(null); };
+    try { xhr.send(); } catch (e) { applyGuardState(null); }
+  }
+
+  function applyGuardState(notice) {
+    var guardEl = $('family-guard');
+    if (!guardEl) return;
+
+    var iconEl = $('family-guard-icon');
+    var titleEl = $('family-guard-title');
+    var textEl = $('family-guard-text');
+    var timeEl = $('family-guard-time');
+
+    // Regra 1: Recado prioritario do Mac Studio
+    if (notice && notice.active && notice.message) {
+      guardEl.className = 'family-guard active message';
+      iconEl.textContent = '💌';
+      titleEl.textContent = 'Recado de ' + (notice.author || 'Papai');
+      textEl.textContent = notice.message;
+      timeEl.textContent = notice.timestamp || '';
+      return;
+    }
+
+    // Regra 2: Rotina da Fernanda (Dias de semana x Fim de semana ate as 18h)
+    var now = new Date();
+    var day = now.getDay(); // 0 = Dom, 6 = Sab, 1..5 = Seg..Sex
+    var hours = now.getHours();
+    var minutes = now.getMinutes();
+    var isWeekend = (day === 0 || day === 6);
+
+    if (!isWeekend) {
+      guardEl.className = 'family-guard active weekday';
+      iconEl.textContent = '🧸';
+      titleEl.textContent = 'Rotina da Fernanda';
+      textEl.textContent = 'Hoje é dia de brincar e estudar! TV liberada no final de semana.';
+      timeEl.textContent = 'Segunda a Sexta';
+    } else {
+      if (hours >= 18) {
+        guardEl.className = 'family-guard active bedtime';
+        iconEl.textContent = '🌙';
+        titleEl.textContent = 'Hora do Descanso';
+        textEl.textContent = 'Fim da sessão de hoje! Hora da rotina da noite da Fernanda.';
+        timeEl.textContent = 'Limite: 18h';
+      } else if (hours === 17 && minutes >= 45) {
+        guardEl.className = 'family-guard active warning';
+        iconEl.textContent = '⏳';
+        titleEl.textContent = 'Quase na hora';
+        var minsLeft = 60 - minutes;
+        textEl.textContent = 'Faltam ' + minsLeft + ' minutinhos para desligar a TV e tomar banho!';
+        timeEl.textContent = 'Limite: 18h';
+      } else {
+        guardEl.className = 'family-guard';
+      }
+    }
+  }
+
   function renderAll() {
     renderTop();
     renderQuotes();
@@ -1192,6 +1267,7 @@
     renderDrawer();
     renderClock();
     checkNight();
+    updateFamilyGuard();
     if (st.zone === Z.SETTINGS) renderSettings();
     updateFocus();
   }
@@ -1237,7 +1313,7 @@
     // LG: with handlesRelaunch the app has to come to the front itself, or opening it again while it runs shows nothing.
     if (window.PalmSystem && window.PalmSystem.activate) window.PalmSystem.activate();
     reset();
-    loadApps(function () { renderShelf(); renderDrawer(); Data.refresh(); });
+    loadApps(function () { renderShelf(); renderDrawer(); Data.refresh(); updateFamilyGuard(); });
   }
 
   window.addEventListener('resize', fit);
@@ -1246,7 +1322,7 @@
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) { hideSaver(); return; }
     idleAt = Date.now();
-    loadApps(function () { renderShelf(); renderDrawer(); updateFocus(); Data.refresh(); });
+    loadApps(function () { renderShelf(); renderDrawer(); updateFocus(); Data.refresh(); updateFamilyGuard(); });
   });
 
   I18N.set(Prefs.language());
@@ -1263,6 +1339,7 @@
   setInterval(function () {
     checkNight();
     Data.refresh();
+    updateFamilyGuard();
     if (!saverOn && !sheetOpen() && Date.now() - idleAt > SAVER_AFTER) showSaver();
     if (saverOn) tickSaverClock($('saver').querySelector('.clock'));
   }, 30000);
