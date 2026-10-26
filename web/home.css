@@ -552,12 +552,16 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 /* Tizen 2 (see tv.js): no shadows or animations, which its GPU can't keep up with while the focus moves. */
 .lite * { box-shadow: none !important; -webkit-transition: none !important; transition: none !important; }
 
-/* MARK: - Family Guard & Noticeboard */
+/* MARK: - Family Guard & Noticeboard (Top Dynamic Island Style) */
 .family-guard {
   position: absolute;
-  top: 734px;
-  left: 76px;
-  right: 76px;
+  top: 46px;
+  left: 50%;
+  -webkit-transform: translateX(-50%) translateY(-90px);
+  transform: translateX(-50%) translateY(-90px);
+  width: auto;
+  min-width: 480px;
+  max-width: 880px;
   height: 62px;
   border-radius: 20px;
   display: flex;
@@ -584,8 +588,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .family-guard.active {
   opacity: 1;
   pointer-events: auto;
-  -webkit-transform: translateY(0);
-  transform: translateY(0);
+  -webkit-transform: translateX(-50%) translateY(0);
+  transform: translateX(-50%) translateY(0);
 }
 .family-guard-icon {
   font-size: 26px;

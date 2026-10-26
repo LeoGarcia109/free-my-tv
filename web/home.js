@@ -1168,6 +1168,7 @@
   // MARK: - Keys
 
   document.addEventListener('keydown', function (e) {
+    dismissGuard();
     var k = e.keyCode;
     if (poke(k === TV.keys.ok)) { e.preventDefault(); return; }   // the first press only wakes the screen (or OK watches)
     if (k === TV.keys.left) move(-1, 0);
@@ -1206,6 +1207,20 @@
     try { xhr.send(); } catch (e) { applyGuardState(null); }
   }
 
+  var guardDismissTimer = null;
+  var lastNoticeMsg = null;
+
+  function dismissGuard() {
+    var guardEl = $('family-guard');
+    if (guardEl) {
+      setClass(guardEl, 'active', false);
+    }
+    if (guardDismissTimer) {
+      clearTimeout(guardDismissTimer);
+      guardDismissTimer = null;
+    }
+  }
+
   function applyGuardState(notice) {
     var guardEl = $('family-guard');
     if (!guardEl) return;
@@ -1215,15 +1230,27 @@
     var textEl = $('family-guard-text');
     var timeEl = $('family-guard-time');
 
+    var isNewMessage = false;
+
     // Regra 1: Recado prioritario do Mac Studio
     if (notice && notice.active && notice.message) {
+      if (lastNoticeMsg !== notice.message) {
+        lastNoticeMsg = notice.message;
+        isNewMessage = true;
+      }
       guardEl.className = 'family-guard active message';
       iconEl.textContent = '💌';
       titleEl.textContent = 'Recado de ' + (notice.author || 'Papai');
       textEl.textContent = notice.message;
       timeEl.textContent = notice.timestamp || '';
+      
+      // Auto-recolhe apos 9 segundos para nao ficar na tela para sempre
+      if (guardDismissTimer) clearTimeout(guardDismissTimer);
+      guardDismissTimer = setTimeout(dismissGuard, 9000);
       return;
     }
+
+    lastNoticeMsg = null;
 
     // Regra 2: Rotina da Fernanda (Dias de semana x Fim de semana ate as 18h)
     var now = new Date();
@@ -1238,6 +1265,8 @@
       titleEl.textContent = 'Rotina da Fernanda';
       textEl.textContent = 'Hoje é dia de brincar e estudar! TV liberada no final de semana.';
       timeEl.textContent = 'Segunda a Sexta';
+      if (guardDismissTimer) clearTimeout(guardDismissTimer);
+      guardDismissTimer = setTimeout(dismissGuard, 8000);
     } else {
       if (hours >= 18) {
         guardEl.className = 'family-guard active bedtime';
@@ -1245,6 +1274,8 @@
         titleEl.textContent = 'Hora do Descanso';
         textEl.textContent = 'Fim da sessão de hoje! Hora da rotina da noite da Fernanda.';
         timeEl.textContent = 'Limite: 18h';
+        if (guardDismissTimer) clearTimeout(guardDismissTimer);
+        guardDismissTimer = setTimeout(dismissGuard, 8000);
       } else if (hours === 17 && minutes >= 45) {
         guardEl.className = 'family-guard active warning';
         iconEl.textContent = '⏳';
@@ -1252,8 +1283,10 @@
         var minsLeft = 60 - minutes;
         textEl.textContent = 'Faltam ' + minsLeft + ' minutinhos para desligar a TV e tomar banho!';
         timeEl.textContent = 'Limite: 18h';
+        if (guardDismissTimer) clearTimeout(guardDismissTimer);
+        guardDismissTimer = setTimeout(dismissGuard, 8000);
       } else {
-        guardEl.className = 'family-guard';
+        dismissGuard();
       }
     }
   }
