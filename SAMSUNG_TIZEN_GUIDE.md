@@ -144,3 +144,20 @@ A auditoria de processos via SDB revelou os seguintes serviços consumindo RAM e
 * `samsung-analytics` (`com.samsung.tizen.samsung-analytics`): Telemetria contínua.
 
 Com o AdGuard Home ativo como DNS primário da TV, todos os domínios desses serviços (`*.samsungqbe.com`, `ads.samsung.com`, `samsungcloudsolution.net`, `samsungacr.com`) resolvem para `0.0.0.0` instantaneamente, mantendo a TV rápida e sem anúncios.
+
+---
+
+## 👨‍👩‍👧 9. Guardião da Família & Quadro de Recados (Noticeboard)
+
+Integração nativa local-first entre o Mac Studio e a TV Samsung para gerenciamento de recados e rotina de sono da Fernanda.
+
+### Como Funciona:
+1. **Servidor Local no Mac Studio:** O daemon `tv_notice_server.py` roda na porta `192.168.100.120:9120` gerenciado pelo LaunchAgent `com.leogarcia.tv-notice-server.plist`.
+2. **Atualização na TV:** A cada 30 segundos, o Free My TV consulta a API e renderiza um banner de vidro translúcido (`#family-guard`) localizado a `734px` de altura, logo acima da prateleira de apps.
+3. **Regras da Rotina da Fernanda:**
+   - **Segunda a Sexta:** Exibe aviso de que TV durante a semana é restrita (*"Hoje é dia de brincar e estudar! TV liberada no final de semana 🧸"*).
+   - **Sábado e Domingo (17h45 às 18h00):** Aviso de contagem regressiva (*"Faltam X minutinhos para desligar a TV e tomar banho! ⏳"*).
+   - **Sábado e Domingo (Após as 18h00):** Encerramento da sessão (*"Fim da sessão de hoje! Hora da rotina da noite da Fernanda 🌙"*).
+4. **Recado Prioritário do Léo:** Quando você envia um recado, ele assume prioridade máxima na tela com o ícone 💌.
+   - Enviar recado: `~/.hermes/scripts/tv_notice.sh "Texto do recado"`
+   - Limpar recado: `~/.hermes/scripts/tv_notice.sh --clear`
