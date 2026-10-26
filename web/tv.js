@@ -136,6 +136,10 @@ var TV = (function () {
     'RN1MCdNq8t.Netflix': 'icons/netflix.svg',
     'org.tizen.netflix-app': 'icons/netflix.svg',
     'NvZ26VG9Yw.HBOGOLAG': 'icons/max.svg',
+    '5b8c3eb16b.BeamCTVDev': 'icons/max.svg',
+    '5b8c3eb16b': 'icons/max.svg',
+    'MCmYXNxgcu.DisneyPlus': 'icons/disney.svg',
+    'MCmYXNxgcu': 'icons/disney.svg',
     'rJeHak5zRg.Spotify': 'icons/spotify.svg',
     'cexr1qp97S.Deezer': 'icons/deezer.svg',
     '5SLwh7m3En.TizenYouTubeKids': 'icons/youtubekids.svg',
@@ -150,6 +154,10 @@ var TV = (function () {
   // Names Smart Hub gets wrong: HBO's app has none (so it never reached the shelf), others are long or old.
   var SAMSUNG_TITLES = {
     'NvZ26VG9Yw.HBOGOLAG': 'Max',
+    '5b8c3eb16b.BeamCTVDev': 'Max',
+    '5b8c3eb16b': 'Max',
+    'MCmYXNxgcu.DisneyPlus': 'Disney+',
+    'MCmYXNxgcu': 'Disney+',
     'rJeHak5zRg.Spotify': 'Spotify',
     'evKhCgZelL.AmazonIgnitionLauncher2': 'Prime Video',
     'org.tizen.globoplayapp': 'Globoplay'

@@ -6,6 +6,8 @@
 
 **A fast, ad-free home screen for Google TV, LG and Samsung TVs.**
 
+> 🚀 **Samsung Tizen OS (Brasil / Debloat Edition):** Veja o guia completo de arquitetura, build Tizen CLI nativo no macOS, AdGuard Home e customização para TVs Samsung em [**SAMSUNG_TIZEN_GUIDE.md**](SAMSUNG_TIZEN_GUIDE.md).
+
 Trending picks from your own apps, the weather at a glance, and a look that follows the sunset.<br>
 Open source. Built with Claude Code. One button to undo.
 
