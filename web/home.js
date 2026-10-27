@@ -329,12 +329,13 @@
       setClass(list[i], 'focus', st.zone === Z.TOP && st.top === i);
     }
     list = $('buttons').children;
-    for (i = 0; i < list.length; i++) setClass(list[i], 'focus', st.zone === Z.TOP && st.top === 3 + i);
-    setClass($('quotes'), 'hide', st.zone === Z.TOP && st.top >= 3);
+    for (i = 0; i < list.length; i++) setClass(list[i], 'focus', st.zone === Z.TOP && st.top === 5 + i);
+    setClass($('quotes'), 'hide', (st.zone === Z.TOP && st.top >= 5) || st.tab >= 3);
     list = $('cards').children;
     for (i = 0; i < list.length; i++) setClass(list[i], 'focus', st.zone === Z.CARDS && st.card === i);
     list = $('tiles').children;
     for (i = 0; i < list.length; i++) setClass(list[i], 'focus', st.zone === Z.SHELF && st.shelf === i);
+    setClass(document.body, 'shelf-focused', st.zone === Z.SHELF);
     revealShelf();
     list = document.querySelectorAll('#drawer .key');
     for (i = 0; i < list.length; i++) setClass(list[i], 'focus', st.zone === Z.DRAWER && st.drawer === i);
@@ -375,14 +376,14 @@
 
   // MARK: - Top: title, tabs, buttons, quotes
 
-  var TAB_KIND = [null, 'movie', 'tv'];
+  var TAB_KIND = [null, 'movie', 'tv', null, null];
 
   function renderTop() {
     $('title').textContent = tr('For You');
     var tabs = $('tabs');
     tabs.innerHTML = '';
-    var names = [tr('Explore'), tr('Movies'), tr('Shows')];
-    for (var i = 0; i < 3; i++) {
+    var names = [tr('Explore'), tr('Movies'), tr('Shows'), '🎨 Lousa', '🌿 Minimal'];
+    for (var i = 0; i < names.length; i++) {
       var t = el('button', 'tab', tabs, names[i]);
       hover(t, Z.TOP, i);
     }
@@ -394,7 +395,7 @@
       r.style.left = (1596 + 88 * b) + 'px';
       sym(defs[b][0], r);
       el('div', 'tip', r, defs[b][1]);
-      hover(r, Z.TOP, 3 + b);
+      hover(r, Z.TOP, 5 + b);
     }
   }
 
@@ -411,12 +412,20 @@
   // MARK: - Picks and background
 
   function renderCards() {
+    if (st.tab >= 3) {
+      cards = [];
+      $('cards').innerHTML = '';
+      setClass(body, 'no-picks', false);
+      updateCustomViews();
+      updateFocus();
+      return;
+    }
     var list = Data.picks(TAB_KIND[st.tab]);
     var holder = $('cards');
     setClass(body, 'no-picks', !list.length);
     var same = list.length === cards.length;
     for (var i = 0; same && i < list.length; i++) same = list[i].id === cards[i].id && list[i].backdrop === cards[i].backdrop && list[i].meta === cards[i].meta;
-    if (same && holder.children.length === list.length) return;
+    if (same && holder.children.length === list.length) { updateCustomViews(); return; }
     cards = list;
     holder.innerHTML = '';
     var rects = [[80, 1040], [1160, 320], [1520, 320]];
@@ -433,6 +442,7 @@
     st.card = Math.min(st.card, Math.max(0, list.length - 1));
     if (!list.length && st.zone === Z.CARDS) st.zone = Z.SHELF;
     backdrop(list.length ? Data.image(list[0].backdrop, 'w300') : '');
+    updateCustomViews();
     updateFocus();
   }
 
@@ -946,9 +956,9 @@
   function activate() {
     switch (st.zone) {
       case Z.TOP:
-        if (st.top < 3) return;
-        if (st.top === 3) { var live = liveTV(); if (live) launcher(live.id, tr('Live TV'))(); }
-        else if (st.top === 4) { st.zone = Z.SHELF; openDrawer(); st.drawer = 1 < drawerInputs ? 1 : 0; updateFocus(); }
+        if (st.top < 5) return;
+        if (st.top === 5) { var live = liveTV(); if (live) launcher(live.id, tr('Live TV'))(); }
+        else if (st.top === 6) { st.zone = Z.SHELF; openDrawer(); st.drawer = 1 < drawerInputs ? 1 : 0; updateFocus(); }
         else openSettings();
         return;
       case Z.CARDS:
@@ -983,6 +993,8 @@
     if (i === st.tab) return;
     st.tab = i;
     renderCards();
+    updateCustomViews();
+    updateFocus();
   }
 
   function move(dx, dy) {
@@ -992,7 +1004,7 @@
         if (dx) st.shelf = Math.max(0, Math.min(shelf.length - 1, st.shelf + dx));
         else if (dy > 0) { openDrawer(); return; }
         else if (dy < 0) {
-          if (cards.length) { st.zone = Z.CARDS; st.card = nearest(cardNodes, centerX(tiles[st.shelf])); }
+          if (st.tab < 3 && cards.length) { st.zone = Z.CARDS; st.card = nearest(cardNodes, centerX(tiles[st.shelf])); }
           else { st.zone = Z.TOP; st.top = st.tab; }
         }
         break;
@@ -1003,10 +1015,10 @@
         break;
       case Z.TOP:
         if (dx) {
-          st.top = Math.max(0, Math.min(5, st.top + dx));
-          if (st.top < 3) selectTab(st.top);   // as on Apple TV: focusing a tab selects it
+          st.top = Math.max(0, Math.min(7, st.top + dx));
+          if (st.top < 5) selectTab(st.top);   // as on Apple TV: focusing a tab selects it
         } else if (dy > 0) {
-          if (cards.length) { st.zone = Z.CARDS; st.card = Math.min(cards.length - 1, st.top < 3 ? 0 : cards.length - 1); }
+          if (st.tab < 3 && cards.length) { st.zone = Z.CARDS; st.card = Math.min(cards.length - 1, st.top < 5 ? 0 : cards.length - 1); }
           else st.zone = Z.SHELF;
         }
         break;
@@ -1060,7 +1072,7 @@
       if (zone !== Z.DRAWER && st.zone === Z.DRAWER && zone !== Z.SHELF) return;
       if (zone === Z.SHELF && st.zone === Z.DRAWER) closeDrawer();
       st.zone = zone;
-      if (zone === Z.TOP) { st.top = index; if (index < 3) selectTab(index); }
+      if (zone === Z.TOP) { st.top = index; if (index < 5) selectTab(index); }
       else if (zone === Z.CARDS) st.card = index;
       else if (zone === Z.SHELF) st.shelf = index;
       else if (zone === Z.DRAWER) st.drawer = index;
@@ -1291,6 +1303,121 @@
     }
   }
 
+  // MARK: - Whiteboard & Minimal 4K Views
+
+  var wbTimer = null;
+  var wbLastVersion = -1;
+  var minimalTimer = null;
+  var minimalIdx = 0;
+
+  var LANDSCAPES_4K = [
+    'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=3840&q=80',
+    'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=3840&q=80',
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=3840&q=80',
+    'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=3840&q=80',
+    'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=3840&q=80',
+    'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=3840&q=80'
+  ];
+
+  function updateCustomViews() {
+    var wbView = $('whiteboard-view');
+    var minView = $('minimal-view');
+    var cardsEl = $('cards');
+    var clockEl = $('clock');
+
+    if (wbTimer) { clearInterval(wbTimer); wbTimer = null; }
+    if (minimalTimer) { clearInterval(minimalTimer); minimalTimer = null; }
+
+    setClass(document.body, 'mode-minimal', st.tab === 4);
+
+    if (st.tab === 3) {
+      if (cardsEl) cardsEl.style.display = 'none';
+      if (clockEl) clockEl.style.display = 'none';
+      if (minView) minView.style.display = 'none';
+      if (wbView) wbView.style.display = 'block';
+      pollWhiteboard();
+      wbTimer = setInterval(pollWhiteboard, 800);
+    } else if (st.tab === 4) {
+      if (cardsEl) cardsEl.style.display = 'none';
+      if (clockEl) clockEl.style.display = 'none';
+      if (wbView) wbView.style.display = 'none';
+      if (minView) minView.style.display = 'block';
+      startMinimalMode();
+    } else {
+      if (cardsEl) cardsEl.style.display = '';
+      if (clockEl) clockEl.style.display = '';
+      if (wbView) wbView.style.display = 'none';
+      if (minView) minView.style.display = 'none';
+    }
+  }
+
+  function pollWhiteboard() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'http://192.168.100.120:9120/tv/whiteboard', true);
+    xhr.timeout = 1500;
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState !== 4) return;
+      if (xhr.status === 200) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          var imgEl = $('wb-live-img');
+          var phEl = $('wb-placeholder');
+          if (data && data.active && data.image) {
+            if (wbLastVersion !== data.version) {
+              wbLastVersion = data.version;
+              imgEl.src = data.image;
+            }
+            imgEl.style.display = 'block';
+            if (phEl) phEl.style.display = 'none';
+          } else {
+            imgEl.style.display = 'none';
+            if (phEl) phEl.style.display = 'flex';
+          }
+        } catch (e) {}
+      }
+    };
+    try { xhr.send(); } catch (e) {}
+  }
+
+  var minFront = 'minimal-photoA';
+  function startMinimalMode() {
+    renderMinimalClock();
+    nextMinimalPhoto();
+    minimalTimer = setInterval(function () {
+      renderMinimalClock();
+      nextMinimalPhoto();
+    }, 20000);
+  }
+
+  function renderMinimalClock() {
+    var d = new Date();
+    var tEl = $('minimal-time');
+    var dEl = $('minimal-date');
+    var wEl = $('minimal-weather');
+    if (tEl) tEl.textContent = formatDate('format|h:mm', d.getTime());
+    if (dEl) dEl.textContent = formatDate('format|EEEE, MMMM d', d.getTime());
+    if (wEl) {
+      var w = Data.weather;
+      if (w && w.temp != null) {
+        wEl.textContent = (CONFIG.city || 'Ilhéus') + ' · ' + Math.round(w.temp) + '°' + (CONFIG.temperature || 'C');
+      } else {
+        wEl.textContent = (CONFIG.city || 'Ilhéus') + ' · Céu Limpo';
+      }
+    }
+  }
+
+  function nextMinimalPhoto() {
+    var url = LANDSCAPES_4K[minimalIdx++ % LANDSCAPES_4K.length];
+    var a = $('minimal-photoA'), b = $('minimal-photoB');
+    if (!a || !b) return;
+    var front = minFront === 'minimal-photoA' ? a : b;
+    var back = minFront === 'minimal-photoA' ? b : a;
+    back.style.backgroundImage = 'url(' + url + ')';
+    setClass(back, 'on', true);
+    setClass(front, 'on', false);
+    minFront = minFront === 'minimal-photoA' ? 'minimal-photoB' : 'minimal-photoA';
+  }
+
   function renderAll() {
     renderTop();
     renderQuotes();
@@ -1301,6 +1428,7 @@
     renderClock();
     checkNight();
     updateFamilyGuard();
+    updateCustomViews();
     if (st.zone === Z.SETTINGS) renderSettings();
     updateFocus();
   }
