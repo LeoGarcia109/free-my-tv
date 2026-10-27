@@ -382,7 +382,7 @@
     $('title').textContent = tr('For You');
     var tabs = $('tabs');
     tabs.innerHTML = '';
-    var names = [tr('Explore'), tr('Movies'), tr('Shows'), '🎨 Lousa', '🌿 Minimal'];
+    var names = [tr('Explore'), tr('Movies'), tr('Shows'), 'Lousa', 'Minimal'];
     for (var i = 0; i < names.length; i++) {
       var t = el('button', 'tab', tabs, names[i]);
       hover(t, Z.TOP, i);
@@ -1111,9 +1111,36 @@
 
   var saverOn = false, idleAt = Date.now(), saverIndex = 0, saverTimer = 0, saverPick = null, SAVER_AFTER = 5 * 60000;
 
-  /** The screensaver's photos: picks with an app on the TV. */
+  var LANDSCAPES_4K = [
+    {
+      url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=3840&q=80',
+      title: 'Vale de Yosemite · Califórnia'
+    },
+    {
+      url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=3840&q=80',
+      title: 'Pôr do Sol Tropical'
+    },
+    {
+      url: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=3840&q=80',
+      title: 'Lago Alpino nas Montanhas'
+    },
+    {
+      url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=3840&q=80',
+      title: 'Floresta Verdejante · Aurora'
+    },
+    {
+      url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=3840&q=80',
+      title: 'Lago di Braies · Dolomitas'
+    },
+    {
+      url: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=3840&q=80',
+      title: 'Pico Nevado sob as Estrelas'
+    }
+  ];
+
+  /** The screensaver's photos: 4K ambient nature landscapes. */
   function saverPhotos() {
-    return Data.showcase().filter(function (p) { return p.backdrop && Data.appFor(p.app); });
+    return LANDSCAPES_4K;
   }
 
   function showSaver() {
@@ -1128,20 +1155,15 @@
     el('div', 'time', clock);
     el('div', 'date', clock);
     el('div', 'title', clock);
-    var hint = el('div', 'hint', clock);
     var front = a;
     function next() {
       if (!saverOn) return;
       var p = photos.length ? photos[saverIndex++ % photos.length] : null;
       var back = front === a ? b : a;
       if (p) {
-        back.style.backgroundImage = 'url(' + Data.image(p.backdrop, 'original') + ')';
+        back.style.backgroundImage = 'url(' + (p.url || Data.image(p.backdrop, 'original')) + ')';
         back.style.webkitTransform = back.style.transform = 'scale(1.0)';
-        clock.children[2].textContent = p.title;
-        saverPick = p;
-        // With Watch from the screensaver on, OK opens this title's app (any other key only closes).
-        var app = Prefs.saverWatch() && Data.appFor(p.app);
-        hint.textContent = app ? trf('Press OK to watch on {app} · any other button to close', {app: app.title}) : '';
+        clock.children[2].textContent = p.title || '';
         setTimeout(function () {
           setClass(back, 'on', true);
           setClass(front, 'on', false);
@@ -1150,7 +1172,7 @@
         }, 60);
       }
       tickSaverClock(clock);
-      saverTimer = setTimeout(next, 12000);
+      saverTimer = setTimeout(next, 20000);
     }
     setClass(s, 'on', true);
     next();
@@ -1159,7 +1181,9 @@
   function tickSaverClock(clock) {
     var d = new Date();
     clock.firstChild.textContent = formatDate('format|h:mm', d.getTime());
-    clock.children[1].textContent = formatDate('format|EEEE, MMMM d', d.getTime());
+    var w = Data.weather;
+    var wStr = (w && w.temp != null) ? ' · ' + Math.round(w.temp) + '°' + (CONFIG.temperature || 'C') : '';
+    clock.children[1].textContent = formatDate('format|EEEE, MMMM d', d.getTime()) + wStr;
   }
 
   function hideSaver() {
@@ -1171,9 +1195,12 @@
   function poke(ok) {
     idleAt = Date.now();
     if (!saverOn) return false;
-    var app = ok && saverPick && Prefs.saverWatch() && Data.appFor(saverPick.app);
     hideSaver();
-    if (app) launcher(app.id, app.title)();
+    if (st.tab === 4) {
+      st.tab = 0;
+      renderCards();
+      updateFocus();
+    }
     return true;
   }
 
@@ -1307,33 +1334,18 @@
 
   var wbTimer = null;
   var wbLastVersion = -1;
-  var minimalTimer = null;
-  var minimalIdx = 0;
-
-  var LANDSCAPES_4K = [
-    'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=3840&q=80',
-    'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=3840&q=80',
-    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=3840&q=80',
-    'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=3840&q=80',
-    'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=3840&q=80',
-    'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=3840&q=80'
-  ];
 
   function updateCustomViews() {
     var wbView = $('whiteboard-view');
-    var minView = $('minimal-view');
     var cardsEl = $('cards');
     var clockEl = $('clock');
 
     if (wbTimer) { clearInterval(wbTimer); wbTimer = null; }
-    if (minimalTimer) { clearInterval(minimalTimer); minimalTimer = null; }
-
-    setClass(document.body, 'mode-minimal', st.tab === 4);
 
     if (st.tab === 3) {
+      if (saverOn) hideSaver();
       if (cardsEl) cardsEl.style.display = 'none';
       if (clockEl) clockEl.style.display = 'none';
-      if (minView) minView.style.display = 'none';
       if (wbView) wbView.style.display = 'block';
       pollWhiteboard();
       wbTimer = setInterval(pollWhiteboard, 800);
@@ -1341,13 +1353,12 @@
       if (cardsEl) cardsEl.style.display = 'none';
       if (clockEl) clockEl.style.display = 'none';
       if (wbView) wbView.style.display = 'none';
-      if (minView) minView.style.display = 'block';
-      startMinimalMode();
+      showSaver();
     } else {
+      if (saverOn) hideSaver();
       if (cardsEl) cardsEl.style.display = '';
       if (clockEl) clockEl.style.display = '';
       if (wbView) wbView.style.display = 'none';
-      if (minView) minView.style.display = 'none';
     }
   }
 
@@ -1377,45 +1388,6 @@
       }
     };
     try { xhr.send(); } catch (e) {}
-  }
-
-  var minFront = 'minimal-photoA';
-  function startMinimalMode() {
-    renderMinimalClock();
-    nextMinimalPhoto();
-    minimalTimer = setInterval(function () {
-      renderMinimalClock();
-      nextMinimalPhoto();
-    }, 20000);
-  }
-
-  function renderMinimalClock() {
-    var d = new Date();
-    var tEl = $('minimal-time');
-    var dEl = $('minimal-date');
-    var wEl = $('minimal-weather');
-    if (tEl) tEl.textContent = formatDate('format|h:mm', d.getTime());
-    if (dEl) dEl.textContent = formatDate('format|EEEE, MMMM d', d.getTime());
-    if (wEl) {
-      var w = Data.weather;
-      if (w && w.temp != null) {
-        wEl.textContent = (CONFIG.city || 'Ilhéus') + ' · ' + Math.round(w.temp) + '°' + (CONFIG.temperature || 'C');
-      } else {
-        wEl.textContent = (CONFIG.city || 'Ilhéus') + ' · Céu Limpo';
-      }
-    }
-  }
-
-  function nextMinimalPhoto() {
-    var url = LANDSCAPES_4K[minimalIdx++ % LANDSCAPES_4K.length];
-    var a = $('minimal-photoA'), b = $('minimal-photoB');
-    if (!a || !b) return;
-    var front = minFront === 'minimal-photoA' ? a : b;
-    var back = minFront === 'minimal-photoA' ? b : a;
-    back.style.backgroundImage = 'url(' + url + ')';
-    setClass(back, 'on', true);
-    setClass(front, 'on', false);
-    minFront = minFront === 'minimal-photoA' ? 'minimal-photoB' : 'minimal-photoA';
   }
 
   function renderAll() {
