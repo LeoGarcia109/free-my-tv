@@ -1113,27 +1113,27 @@
 
   var LANDSCAPES_4K = [
     {
-      url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=3840&q=80',
+      url: 'wallpapers/1.jpg',
       title: 'Vale de Yosemite · Califórnia'
     },
     {
-      url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=3840&q=80',
+      url: 'wallpapers/2.jpg',
       title: 'Pôr do Sol Tropical'
     },
     {
-      url: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=3840&q=80',
+      url: 'wallpapers/3.jpg',
       title: 'Lago Alpino nas Montanhas'
     },
     {
-      url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=3840&q=80',
+      url: 'wallpapers/4.jpg',
       title: 'Floresta Verdejante · Aurora'
     },
     {
-      url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=3840&q=80',
+      url: 'wallpapers/5.jpg',
       title: 'Lago di Braies · Dolomitas'
     },
     {
-      url: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=3840&q=80',
+      url: 'wallpapers/6.jpg',
       title: 'Pico Nevado sob as Estrelas'
     }
   ];
@@ -1155,13 +1155,24 @@
     el('div', 'time', clock);
     el('div', 'date', clock);
     el('div', 'title', clock);
+
+    // Initial photo ready immediately
+    var p0 = photos[saverIndex++ % photos.length];
+    if (p0) {
+      a.style.backgroundImage = "url('" + p0.url + "')";
+      a.style.webkitTransform = a.style.transform = 'scale(1.0)';
+      setClass(a, 'on', true);
+      clock.children[2].textContent = p0.title || '';
+    }
+    tickSaverClock(clock);
+
     var front = a;
     function next() {
       if (!saverOn) return;
       var p = photos.length ? photos[saverIndex++ % photos.length] : null;
       var back = front === a ? b : a;
       if (p) {
-        back.style.backgroundImage = 'url(' + (p.url || Data.image(p.backdrop, 'original')) + ')';
+        back.style.backgroundImage = "url('" + p.url + "')";
         back.style.webkitTransform = back.style.transform = 'scale(1.0)';
         clock.children[2].textContent = p.title || '';
         setTimeout(function () {
@@ -1175,7 +1186,7 @@
       saverTimer = setTimeout(next, 20000);
     }
     setClass(s, 'on', true);
-    next();
+    saverTimer = setTimeout(next, 20000);
   }
 
   function tickSaverClock(clock) {
